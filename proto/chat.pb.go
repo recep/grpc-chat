@@ -190,15 +190,15 @@ var file_proto_chat_proto_rawDesc = []byte{
 	0x74, 0x65, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x6f, 0x6e, 0x74,
 	0x65, 0x6e, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
 	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x22, 0x08, 0x0a, 0x06, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x32, 0x6e, 0x0a, 0x0b, 0x43,
-	0x68, 0x61, 0x74, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x33, 0x0a, 0x10, 0x43, 0x72,
+	0x70, 0x22, 0x08, 0x0a, 0x06, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x32, 0x70, 0x0a, 0x0b, 0x43,
+	0x68, 0x61, 0x74, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x35, 0x0a, 0x10, 0x43, 0x72,
 	0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x10,
 	0x2e, 0x63, 0x68, 0x61, 0x74, 0x2e, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e,
-	0x1a, 0x0d, 0x2e, 0x63, 0x68, 0x61, 0x74, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12,
-	0x2a, 0x0a, 0x0b, 0x53, 0x65, 0x6e, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x0d,
-	0x2e, 0x63, 0x68, 0x61, 0x74, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x1a, 0x0c, 0x2e,
-	0x63, 0x68, 0x61, 0x74, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x42, 0x09, 0x5a, 0x07, 0x3b,
-	0x63, 0x68, 0x61, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x1a, 0x0d, 0x2e, 0x63, 0x68, 0x61, 0x74, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x30,
+	0x01, 0x12, 0x2a, 0x0a, 0x0b, 0x53, 0x65, 0x6e, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
+	0x12, 0x0d, 0x2e, 0x63, 0x68, 0x61, 0x74, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x1a,
+	0x0c, 0x2e, 0x63, 0x68, 0x61, 0x74, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x42, 0x09, 0x5a,
+	0x07, 0x3b, 0x63, 0x68, 0x61, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -306,7 +306,7 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ChatServiceClient interface {
-	CreateConnection(ctx context.Context, in *Connection, opts ...grpc.CallOption) (*Message, error)
+	CreateConnection(ctx context.Context, in *Connection, opts ...grpc.CallOption) (ChatService_CreateConnectionClient, error)
 	SendMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Status, error)
 }
 
@@ -318,13 +318,36 @@ func NewChatServiceClient(cc grpc.ClientConnInterface) ChatServiceClient {
 	return &chatServiceClient{cc}
 }
 
-func (c *chatServiceClient) CreateConnection(ctx context.Context, in *Connection, opts ...grpc.CallOption) (*Message, error) {
-	out := new(Message)
-	err := c.cc.Invoke(ctx, "/chat.ChatService/CreateConnection", in, out, opts...)
+func (c *chatServiceClient) CreateConnection(ctx context.Context, in *Connection, opts ...grpc.CallOption) (ChatService_CreateConnectionClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_ChatService_serviceDesc.Streams[0], "/chat.ChatService/CreateConnection", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &chatServiceCreateConnectionClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ChatService_CreateConnectionClient interface {
+	Recv() (*Message, error)
+	grpc.ClientStream
+}
+
+type chatServiceCreateConnectionClient struct {
+	grpc.ClientStream
+}
+
+func (x *chatServiceCreateConnectionClient) Recv() (*Message, error) {
+	m := new(Message)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *chatServiceClient) SendMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Status, error) {
@@ -338,7 +361,7 @@ func (c *chatServiceClient) SendMessage(ctx context.Context, in *Message, opts .
 
 // ChatServiceServer is the server API for ChatService service.
 type ChatServiceServer interface {
-	CreateConnection(context.Context, *Connection) (*Message, error)
+	CreateConnection(*Connection, ChatService_CreateConnectionServer) error
 	SendMessage(context.Context, *Message) (*Status, error)
 }
 
@@ -346,8 +369,8 @@ type ChatServiceServer interface {
 type UnimplementedChatServiceServer struct {
 }
 
-func (*UnimplementedChatServiceServer) CreateConnection(context.Context, *Connection) (*Message, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateConnection not implemented")
+func (*UnimplementedChatServiceServer) CreateConnection(*Connection, ChatService_CreateConnectionServer) error {
+	return status.Errorf(codes.Unimplemented, "method CreateConnection not implemented")
 }
 func (*UnimplementedChatServiceServer) SendMessage(context.Context, *Message) (*Status, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendMessage not implemented")
@@ -357,22 +380,25 @@ func RegisterChatServiceServer(s *grpc.Server, srv ChatServiceServer) {
 	s.RegisterService(&_ChatService_serviceDesc, srv)
 }
 
-func _ChatService_CreateConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Connection)
-	if err := dec(in); err != nil {
-		return nil, err
+func _ChatService_CreateConnection_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Connection)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(ChatServiceServer).CreateConnection(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/chat.ChatService/CreateConnection",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatServiceServer).CreateConnection(ctx, req.(*Connection))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(ChatServiceServer).CreateConnection(m, &chatServiceCreateConnectionServer{stream})
+}
+
+type ChatService_CreateConnectionServer interface {
+	Send(*Message) error
+	grpc.ServerStream
+}
+
+type chatServiceCreateConnectionServer struct {
+	grpc.ServerStream
+}
+
+func (x *chatServiceCreateConnectionServer) Send(m *Message) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 func _ChatService_SendMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -398,14 +424,16 @@ var _ChatService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*ChatServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateConnection",
-			Handler:    _ChatService_CreateConnection_Handler,
-		},
-		{
 			MethodName: "SendMessage",
 			Handler:    _ChatService_SendMessage_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "CreateConnection",
+			Handler:       _ChatService_CreateConnection_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "proto/chat.proto",
 }

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package chat;
+
+option go_package = ";chatpb";
+
+service ChatService {
+  rpc CreateConnection(Connection) returns(stream Message);
+  rpc SendMessage(Message) returns(Status);
+}
+
+message Connection {
+  string username =1;
+}
+
+message Message{
+  string username = 1;
+  string content = 2;
+  string timestamp = 3;
+}
+
+message Status {}
