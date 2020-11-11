@@ -35,12 +35,15 @@ func main() {
 	}
 
 	wg.Add(1)
+	go sendMessage(*username)
+
+	wg.Add(1)
 	go func(str chatpb.ChatService_CreateConnectionClient) {
 		defer wg.Done()
 		for {
 			msg, err := stream.Recv()
 			if err == io.EOF {
-				continue
+				break
 			}
 			if err != nil {
 				log.Fatalln(err)
@@ -48,9 +51,6 @@ func main() {
 			fmt.Println(msg)
 		}
 	}(stream)
-
-	wg.Add(1)
-	go sendMessage(*username)
 
 	wg.Wait()
 }
@@ -60,7 +60,6 @@ func sendMessage(username string) {
 	ts := time.Now()
 
 	scanner := bufio.NewScanner(os.Stdin)
-
 	for scanner.Scan() {
 		m := &chatpb.Message{
 			Username:  username,
