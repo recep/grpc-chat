@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"sync"
+	"time"
 
 	chatpb "github.com/recep/grpc-chat/proto"
 	"google.golang.org/grpc"
@@ -42,6 +43,20 @@ func (s *server) CreateConnection(conn *chatpb.Connection, stream chatpb.ChatSer
 		stream:   stream,
 	}
 	s.connections = append(s.connections, nConn)
+
+	//
+	for {
+		err := stream.Send(&chatpb.Message{
+			Content:   "",
+			Username:  "computer",
+			Timestamp: "",
+		})
+		if err != nil {
+			return err
+		}
+		time.Sleep(time.Second * 3)
+	}
+	//
 
 	return nil
 }

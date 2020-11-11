@@ -17,6 +17,7 @@ import (
 
 var wg sync.WaitGroup
 var grpcClient chatpb.ChatServiceClient
+var stream chatpb.ChatService_CreateConnectionClient
 
 func main() {
 	username := flag.String("n", "A", "username")
@@ -29,7 +30,7 @@ func main() {
 
 	grpcClient = chatpb.NewChatServiceClient(conn)
 
-	stream, err := grpcClient.CreateConnection(context.Background(), &chatpb.Connection{Username: *username})
+	stream, err = grpcClient.CreateConnection(context.Background(), &chatpb.Connection{Username: *username})
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -38,21 +39,38 @@ func main() {
 	go sendMessage(*username)
 
 	wg.Add(1)
-	go func(str chatpb.ChatService_CreateConnectionClient) {
-		defer wg.Done()
-		for {
-			msg, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				log.Fatalln(err)
-			}
-			fmt.Println(msg)
-		}
-	}(stream)
+	go receiveMessage()
+	// go func() {
+	// 	defer wg.Done()
+	// 	for {
+	// 		msg, err := stream.Recv()
+	// 		if err == io.EOF {
+	// 			break
+	// 		}
+	// 		if err != nil {
+	// 			log.Fatalln(err)
+	// 		}
+	// 		fmt.Println(msg)
+	// 	}
+	// }(stream)
 
 	wg.Wait()
+}
+
+func receiveMessage() {
+	defer wg.Done()
+
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Printf("USERNAME: %s\n", msg.GetUsername())
+		fmt.Printf("Message: %s\n", msg.GetContent())
+	}
 }
 
 func sendMessage(username string) {
